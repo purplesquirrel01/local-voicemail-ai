@@ -27,6 +27,12 @@ LLM APIs.
   playback through a FastAPI portal.
 - Preserves the original PBX voicemail workflow as a fallback.
 
+## Portal Demonstration
+
+![Synthetic voicemail review portal showing transcription, extracted fields, confidence indicators, and audio playback](demo/portal-demo.png)
+
+*Demonstration using entirely synthetic information. No production data, patient information, employee information, or organization-identifying details are shown.*
+
 ## Architecture
 
 1. A watcher detects new voicemail audio and metadata.
