@@ -38,6 +38,20 @@ LLM APIs.
 7. SQLite stores transcripts, fields, audit records, and review state.
 8. Staff review the result through the FastAPI portal.
 
+```mermaid
+graph TD;
+    A[PBX intake] --> B[Whisper transcription];
+    B --> C[Gemma extraction];
+    C --> D[Parakeet verification];
+    D --> E[Python resolver and SQLite audit];
+    E --> F[Staff review portal];
+```
+
+The models do not directly write final operational values. Gemma proposes
+bounded candidates, Parakeet independently checks selected audio spans, and
+deterministic Python decides whether each field can be accepted or requires
+human review.
+
 ## Verification Design
 
 Phone and fax numbers can look plausible even when a transcription model
