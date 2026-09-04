@@ -12,7 +12,7 @@ license = { text = "Apache-2.0" }
 authors = [{name = "Local Voicemail Transcription contributors"}]
 dependencies = [
   "requests==2.33.0",
-  "watchdog==4.0.1",
+  "watchdog==6.0.0",
 ]
 
 [project.optional-dependencies]
