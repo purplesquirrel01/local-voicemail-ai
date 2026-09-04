@@ -29,7 +29,7 @@ LLM APIs.
 
 ## Portal Demonstration
 
-![Synthetic voicemail review portal showing transcription, extracted fields, confidence indicators, and audio playback](demo/portal-demo.png)
+![Synthetic voicemail review portal showing transcription, extracted fields, confidence indicators, and audio playback](demo/portal-demo1.png)
 
 *Demonstration using entirely synthetic information. No production data, patient information, employee information, or organization-identifying details are shown.*
 
