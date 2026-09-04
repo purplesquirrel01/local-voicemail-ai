@@ -1,52 +1,29 @@
-# Synthetic Voicemail Walkthrough
+# Synthetic voicemail walkthrough
 
-This example is entirely synthetic. It contains no real patient, employee,
-caller, organization, or production information.
+This newly written example matches the recreated portal image. Every identity,
+date, number, and mailbox is fictional. The displayed verification and review
+states are illustrative fixtures, not measured model results.
 
-## Example Voicemail
+> This is Bailey Sample calling for Jordan Sample. Their date of birth is
+> February 3, 1970. Please call 202-555-0142 to arrange an appointment. Thank you.
 
-> Hi, this is Maria Sample calling for John Example. His date of birth is
-> January 15, 1980. Please call me back at 217-555-0142 about rescheduling
-> an appointment. Thank you.
-
-## Primary Transcription
-
-**Model:** Whisper large-v3 via faster-whisper
-
-**Transcript:**
-
-Hi, this is Maria Sample calling for John Example. His date of birth is
-January 15, 1980. Please call me back at 217-555-0142 about rescheduling
-an appointment. Thank you.
-
-## Structured Candidates
-
-| Field | Candidate |
+| Field | Synthetic value |
 |---|---|
-| Caller | Maria Sample |
-| Patient/subject | John Example |
-| Date of birth | 01/15/1980 |
-| Callback number | 217-555-0142 |
+| Reviewer | Avery Example |
+| Mailbox | 9901 |
+| Caller | Bailey Sample |
+| Subject | Jordan Sample |
+| Date of birth | 02/03/1970 |
+| Callback | 202-555-0142 |
 
-## Callback Verification
+The normal processing path uses Whisper for primary transcription, Gemma for
+constrained extraction, and deterministic Python for normalization and evidence
+checks. Where configured, Parakeet verifies the callback against its audio clip.
+The reviewer sees disagreement and ambiguity instead of an unconditional approval.
 
-1. Gemma identifies the callback-number candidate and its supporting text.
-2. The evidence is mapped to Whisper word-level timestamps.
-3. FFmpeg extracts the corresponding audio window.
-4. Parakeet independently transcribes the selected audio clip.
-5. Deterministic Python compares the normalized results.
+The screenshot deliberately illustrates a verified callback and a date of birth
+requiring review. Its audio control plays generated silence. No model was run to
+produce these demonstration states, and no production record was used.
 
-| Source | Normalized value |
-|---|---|
-| Whisper evidence | 2175550142 |
-| Gemma candidate | 2175550142 |
-| Parakeet verification | 2175550142 |
-
-**Resolver decision:** Verified  
-**Applied:** Yes  
-
-## Safety Behavior
-
-If the models disagreed, the evidence could not be mapped to audio, or the
-clip contained multiple numbers, the callback number would be marked
-**Needs Review** instead of being silently accepted.
+See [image provenance](../docs/images/README.md) and the
+[architecture](../docs/ARCHITECTURE.md) for the implementation context.

@@ -1,105 +1,141 @@
-# On-Premises AI Voicemail Processing Platform
+# Local Voicemail AI
 
-A production-oriented voicemail transcription and review system that
-processed approximately 150 healthcare voicemails per day across a
-five-site orthopedic practice while keeping audio, transcripts, and
-model inference inside the local environment.
+A self-hosted AI voicemail transcription and structured-review system built for a
+five-site healthcare environment. Python coordinates Whisper Large-v3 through
+faster-whisper, Parakeet TDT, a locally hosted Gemma model through LiteRT, and
+deterministic validation before presenting messages to staff for review.
 
-The system combines Whisper large-v3 transcription, structured extraction
-with Gemma 4 E4B, independent Parakeet TDT verification for high-risk audio
-spans, deterministic Python resolution, field-level audit records, and a
-FastAPI staff review portal.
+![Synthetic voicemail review portal](docs/images/portal-demo.png)
 
-No patient audio or PHI was sent to external transcription services or
-LLM APIs.
+The interface above was recreated with fictional data. Its confidence labels are
+illustrative, not measured model results. [Walkthrough](demo/synthetic-message.md)
+and [image provenance](docs/images/README.md).
 
-## What It Does
+## Deployment context
 
-- Monitors an Asterisk/VitalPBX voicemail queue for new messages.
-- Transcribes voicemail locally with faster-whisper and Whisper large-v3.
-- Extracts structured fields such as names, dates of birth, callback
-  numbers, fax numbers, and message context.
-- Maps high-risk fields back to word-level audio timestamps.
-- Re-transcribes selected audio clips with Parakeet TDT.
-- Uses deterministic Python rules to accept, reject, or flag values.
-- Records field-level verification and review state in SQLite.
-- Presents transcripts, fields, verification status, search, and audio
-  playback through a FastAPI portal.
-- Preserves the original PBX voicemail workflow as a fallback.
+The developer reports deployment across five healthcare sites and approximately
+**150 messages per day**. Local processing was intended to keep sensitive audio
+and derived data inside the organization's environment. These are deployment
+context figures, not independent accuracy, performance, or clinical measurements.
 
-## Portal Demonstration
+This repository is a **portfolio/reference implementation** of the application.
+It is not a certified clinical product or a turnkey production deployment.
+It includes synthetic fixtures and configuration examples; production data and
+site configuration are not included.
 
-![Synthetic voicemail review portal showing transcription, extracted fields, confidence indicators, and audio playback](demo/portal-demo.png)
-
-*Demonstration using entirely synthetic information. No production data, patient information, employee information, or organization-identifying details are shown.*
-
-## Architecture
-
-1. A watcher detects new voicemail audio and metadata.
-2. Whisper produces the primary transcript and word-level timestamps.
-3. Gemma proposes bounded structured-field candidates.
-4. Evidence is mapped from the transcript back to the original audio.
-5. Parakeet independently re-transcribes clips containing high-risk fields.
-6. Deterministic Python decides whether each field can be accepted.
-7. SQLite stores transcripts, fields, audit records, and review state.
-8. Staff review the result through the FastAPI portal.
+## Processing flow
 
 ```mermaid
-graph TD;
-    A[PBX intake] --> B[Whisper transcription];
-    B --> C[Gemma extraction];
-    C --> D[Parakeet verification];
-    D --> E[Python resolver and SQLite audit];
-    E --> F[Staff review portal];
+flowchart TD
+    PBX[Asterisk voicemail spool] --> Watcher[Python watcher]
+    Watcher --> Whisper[Whisper transcription]
+    Whisper --> Gemma[Gemma semantic extraction]
+    Watcher --> Parakeet[Parakeet number verification]
+    Gemma --> Verify[Deterministic verification]
+    Parakeet --> Verify
+    Verify --> State[SQLite state and evidence]
+    State --> Portal[Staff review portal]
 ```
 
-The models do not directly write final operational values. Gemma proposes
-bounded candidates, Parakeet independently checks selected audio spans, and
-deterministic Python decides whether each field can be accepted or requires
-human review.
+The watcher discovers voicemail files, queues processing, and records status.
+Whisper supplies the primary transcript. Gemma extracts structured candidates;
+Parakeet supplies additional audio evidence for important numbers. Python checks
+names, dates of birth, callback numbers, and fax numbers before the portal shows
+the result alongside the audio and review state.
 
-## Verification Design
+## Engineering decisions
 
-Phone and fax numbers can look plausible even when a transcription model
-gets one digit wrong. This system does not allow a single model to become
-the final authority.
+- **Models propose; code checks.** A plausible model response is not sufficient
+  evidence. Deterministic verification validates schemas, normalizes fields,
+  compares sources, and preserves ambiguity when the evidence conflicts.
+- **Keep evidence separate from presentation.** Raw candidates and verification
+  records remain available while provisional corrections are applied to the
+  staff-facing transcript. This makes disagreements diagnosable.
+- **Treat voicemail as a workflow.** Stable message identity, SQLite state,
+  retries, duplicate handling, and bounded provider requests support ingestion
+  beyond a single model call.
+- **Make review explicit.** Confidence and review flags help staff decide what to
+  check. Audio remains accessible; uncertain results are not unconditional
+  approvals. People remain responsible for important information.
+- **Separate service contracts.** Transcription, extraction, and number
+  verification communicate through bounded HTTP interfaces. The source supports
+  local services and separation of PBX-facing processing from AI inference.
 
-Whisper produces the primary transcript and word timings. Gemma proposes
-structured candidates with supporting evidence. Parakeet independently
-re-transcribes timestamp-grounded audio clips containing high-risk fields.
-Deterministic Python then decides whether a value can be accepted or should
-be sent for human review.
+## Privacy and security design
 
-> Models propose, evidence grounds, deterministic code decides, and humans
-> retain control.
+The architecture uses local inference and mailbox-authorized access. The portal
+includes password hashing, signed sessions, CSRF checks, and mailbox filtering.
+An optional read-only API adds scoped bearer tokens and request limits.
+Email, forwarding, and raw model-response logging are off by default.
+
+Local hosting alone does not provide encryption, access governance, or regulatory
+compliance. Production use requires an independent security and operational
+review. This project makes no HIPAA compliance or certification claim.
+See [security design](docs/SECURITY_AND_PHI.md) and [reporting policy](SECURITY.md).
+
+## Source map
+
+| Engineering area | Start here |
+| --- | --- |
+| Ingestion, processing state, retry handling | [watcher.py](watcher.py), [voicemail_watcher](voicemail_watcher/) |
+| Primary transcription and ASR evidence | [whisper_server.py](whisper_server.py), [asr_lattice.py](asr_lattice.py) |
+| Additional number verification | [parakeet_server.py](parakeet_server.py) |
+| Gemma requests and candidate orchestration | [litert_chat_web.py](litert_chat_web.py), [extraction_orchestrator.py](extraction_orchestrator.py), [prompts](prompts/) |
+| Deterministic extraction and resolution | [candidate_extractor.py](candidate_extractor.py), [final_resolver.py](final_resolver.py), [verification.py](verification.py) |
+| Portal backend, embedded UI, and authorization | [voicemail_portal.py](voicemail_portal.py), [voicemail_portal_app](voicemail_portal_app/) |
+| Shared database and spool helpers | [voicemail_common](voicemail_common/) |
+| Behavioral regression and API tests | [tests](tests/), especially [test_core.py](tests/test_core.py) and [test_api_v1.py](tests/test_api_v1.py) |
+| Configuration and boundaries | [configuration](docs/CONFIGURATION.md), [architecture](docs/ARCHITECTURE.md) |
+
+The package modules provide focused interfaces around the existing application;
+the larger root modules contain its principal implementations.
 
 ## Technology
 
-- Python
-- FastAPI
-- SQLite
-- faster-whisper / Whisper large-v3
-- Gemma 4 E4B / LiteRT
-- NVIDIA Parakeet TDT 0.6B v2
-- FFmpeg
-- Asterisk / VitalPBX
-- Nginx
+Python 3.11+, FastAPI, SQLite, watchdog, Whisper Large-v3/faster-whisper,
+Parakeet TDT, Gemma/LiteRT, and an HTML/CSS/JavaScript review interface.
+Tests use pytest, unittest, synthetic files, mocked model responses, and
+in-process HTTP clients.
 
-## Privacy
+## Development and tests
 
-This public repository contains no real voicemail recordings, transcripts,
-patient information, employee information, credentials, internal network
-addresses, or organization-identifying data.
+In a disposable Linux development workspace with Python 3.11.8 or newer:
 
-All public examples, screenshots, names, phone numbers, dates, and audio
-files are synthetic.
+```bash
+python3.11 -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e '.[dev]'
+python -m pytest -q
+```
 
-The system assists administrative review. It does not diagnose, treat,
-make clinical decisions, or replace human judgment.
+The development dependencies do not download model weights or install the large
+AI runtime stack. Tests exercise real extraction, resolution, storage, provider,
+and API code with synthetic inputs and mocked inference. Their pass count is not
+a measure of transcription accuracy.
 
-## Public Repository Scope
+The [validation guide](docs/VALIDATION.md) lists all CI gates, including privacy,
+secrets, links, lint, packaging, and a clean-wheel installation check. Installing
+the source does not configure a PBX or start any service.
 
-This repository documents a system originally developed for an internal
-healthcare workflow. Organization-specific configuration, production data,
-credentials, deployment details, and protected information are excluded
-from the public version.
+## Known limitations
+
+- Real model inference, throughput, and end-to-end accuracy are not measured by
+  the fixture suite. Separately provisioned compatible runtimes and local model
+  weights are required to run inference.
+- Names, unclear audio, and ambiguous numbers can produce errors. Human review
+  is part of the design, not a fallback guarantee.
+- System installers, service provisioning, release assets, and upgrade/rollback
+  automation are outside this reference repository's scope.
+- Runtime defaults include conventional Asterisk paths. Use a disposable
+  synthetic workspace and explicit configuration for development; the test
+  suite supplies its own temporary paths and does not require a live PBX.
+
+## License and independence
+
+Source code is licensed under [Apache-2.0](LICENSE). Third-party models and
+dependencies retain their own terms; see [model licenses](docs/MODEL_LICENSES.md)
+and [NOTICE](NOTICE). No weights or vendor binaries are bundled.
+
+This is an independent project. Product names identify integrations and do not
+imply endorsement by Asterisk, VitalPBX, Google, NVIDIA, or another vendor.

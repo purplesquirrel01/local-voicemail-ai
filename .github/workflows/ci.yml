@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  portfolio:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install development dependencies
+        run: python -m pip install -e '.[dev]'
+      - name: Compile application and tests
+        run: python -m compileall -q -x '/(\.git|\.venv|build|dist)/' .
+      - name: Complete retained test suite
+        run: python -m pytest -q
+      - name: Lint
+        run: ruff check .
+      - name: Public-source privacy audit
+        run: python -m tools.public_release_audit .
+      - name: Secret audit
+        run: python -m tools.audit_secrets .
+      - name: Documentation links
+        run: python -m tools.validate_documentation .
+      - name: Build wheel and source distribution
+        run: python -m build
+      - name: Inspect built package contents
+        run: python -m tools.audit_release_artifacts dist/*.whl dist/*.tar.gz
+      - name: Verify clean installed wheel
+        run: python -m tools.check_wheel dist/*.whl --venv "${RUNNER_TEMP}/portfolio-wheel"

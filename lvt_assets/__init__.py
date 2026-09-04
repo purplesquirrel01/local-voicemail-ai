@@ -1,0 +1,1 @@
+"""Packaged neutral visual assets."""
