@@ -22,7 +22,7 @@ ai = [
   "uvicorn[standard]==0.46.0",
   "python-multipart==0.0.27",
   "faster-whisper==1.2.1",
-  "ctranslate2==4.8.1",
+  "ctranslate2==4.8.2",
   "nemo-toolkit[asr]==2.6.2",
   "torch==2.9.1",
   "litert-lm==0.13.1",
