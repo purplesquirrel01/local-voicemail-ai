@@ -1,0 +1,12 @@
+Local Voicemail Transcription
+Copyright 2026 Local Voicemail Transcription contributors
+
+This product includes software developed by Local Voicemail Transcription
+contributors and is licensed under the Apache License, Version 2.0.
+
+VitalPBX and Asterisk are trademarks of their respective owners. This project
+is independent and is not affiliated with, endorsed by, or supported by those
+projects or their vendors.
+
+Model weights are not included. Third-party model and runtime licenses apply
+separately; see docs/MODEL_LICENSES.md.

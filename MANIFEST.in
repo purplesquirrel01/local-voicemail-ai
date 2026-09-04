@@ -1,0 +1,6 @@
+include gemma_field_prompt_*.md
+include voicemail_portal_users.example.json
+include SECURITY.md CONTRIBUTING.md NOTICE
+recursive-include docs *.md *.png *.example
+recursive-include demo *.md *.png
+recursive-include tools *.py

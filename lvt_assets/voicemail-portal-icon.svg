@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Voicemail verification">
+  <rect width="64" height="64" rx="14" fill="#1f2937"/>
+  <path d="M13 17h38v25H32l-11 8v-8h-8z" fill="#f8fafc"/>
+  <path d="m23 30 6 6 13-14" fill="none" stroke="#16a34a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

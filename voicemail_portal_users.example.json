@@ -1,0 +1,9 @@
+[
+  {
+    "username": "avery-example",
+    "extension": "9901",
+    "display_name": "Avery Example",
+    "is_admin": false,
+    "password_hash": "replace-with-a-locally-generated-password-hash"
+  }
+]
