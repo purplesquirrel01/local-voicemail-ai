@@ -16,10 +16,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-portal = ["fastapi==0.136.1", "uvicorn[standard]==0.46.0"]
+portal = ["fastapi==0.136.1", "uvicorn[standard]==0.52.4"]
 ai = [
   "fastapi==0.136.1",
-  "uvicorn[standard]==0.46.0",
+  "uvicorn[standard]==0.52.4",
   "python-multipart==0.0.27",
   "faster-whisper==1.2.1",
   "ctranslate2==4.8.1",
@@ -32,7 +32,7 @@ dev = [
   "pytest==8.4.2",
   "ruff==0.12.11",
   "fastapi==0.136.1",
-  "uvicorn[standard]==0.46.0",
+  "uvicorn[standard]==0.52.4",
   "python-multipart==0.0.27",
   "httpx==0.28.1",
 ]
